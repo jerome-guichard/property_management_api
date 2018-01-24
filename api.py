@@ -9,7 +9,7 @@ app = Flask(__name__)
 basedir = os.path.abspath(os.path.dirname(__file__))
 # App config
 # URI to SQLite DB
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'crud.sqlite')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'property_management_db.sqlite')
 # Define db access
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
@@ -38,9 +38,42 @@ class UserSchema(ma.Schema):
         # Fields to expose
         fields = ('firstname', 'lastname','birthday')
 
-# Define instancies
-user_schema = UserSchema()
-users_schema = UserSchema(many=True)
+# Instancies of user schema
+user_schema = UserSchema()           # Single user
+users_schema = UserSchema(many=True) # Multiple user
+
+# Property Model in DB
+class Property(db.Model):
+    # id
+    id = db.Column(db.Integer, primary_key=True)
+    # Name of the property
+    name = db.Column(db.String(80))
+    # Description
+    description = db.Column(db.String(200))
+    # City
+    city = db.Column(db.String(200))
+    # Number of rooms
+    room = db.Column(db.Integer)
+    # userid of the owner -> ownerid -> to be linked to User model
+    userid = db.Column(db.String(200))
+    
+    # Property constructor
+    def __init__(self, name, description, city, room, userid):
+        self.name = name
+        self.description = description
+        self.city = city
+        self.room = room
+        self.userid = userid
+
+# Property Schema
+class PropertySchema(ma.Schema):
+    class Meta:
+        # Fields to expose
+        fields = ('name', 'description','city','room','userid')
+
+
+property_schema = PropertySchema() # Single property
+properties_schema = PropertySchema(many=True) # Multiple Porperties
 
 
 # ENPOINTS
@@ -119,7 +152,71 @@ def user_delete(id):
     # return user
     return user_schema.jsonify(user)
 
-# Run app
+
+# PROPERTIES ENDPOINT
+
+@app.route("/properties", methods=["POST"])
+def add_property():
+    name = request.json['name']
+    description = request.json['description']
+    city = request.json['city']
+    room = request.json['room']
+    userid = request.json['userid']
+        
+    new_property = Property(name, description, city, room, userid)
+
+    db.session.add(new_property)
+    db.session.commit()
+
+    return property_schema.jsonify(new_property)
+
+
+# endpoint to show all users
+@app.route("/properties", methods=["GET"])
+def get_property():
+    all_properties = Property.query.all()
+    result = properties_schema.dump(all_properties)
+    
+    return jsonify(result.data)
+
+# endpoint to get user detail by id
+@app.route("/properties/<id>", methods=["GET"])
+def property_detail(id):
+    property = Property.query.get(id)
+
+    return property_schema.jsonify(property)
+
+# endpoint to update property
+@app.route("/properties/<id>", methods=["PUT"])
+def property_update(id):
+    property = Property.query.get(id)
+    
+    name = request.json['name']
+    description = request.json['description']
+    city = request.json['city']
+    room = request.json['room']
+    userid = request.json['userid']
+
+    property.name = name
+    property.description = description
+    property.city = city 
+    property.room = room
+    property.userid = userid  
+
+    db.session.commit()
+    return property_schema.jsonify(property)
+
+
+# endpoint to delete property
+@app.route("/properties/<id>", methods=["DELETE"])
+def property_delete(id):
+    property = Property.query.get(id)
+    db.session.delete(property)
+    db.session.commit()
+
+    return property_schema.jsonify(property)
+
+# Start app
 if __name__ == '__main__':
     app.run(debug=True)
 
