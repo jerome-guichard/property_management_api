@@ -173,18 +173,21 @@ def add_property():
 
 # endpoint to show all users
 @app.route("/properties", methods=["GET"])
-def get_property():
+def get_properties():
     all_properties = Property.query.all()
     result = properties_schema.dump(all_properties)
     
     return jsonify(result.data)
 
-# endpoint to get user detail by id
-@app.route("/properties/<id>", methods=["GET"])
-def property_detail(id):
-    property = Property.query.get(id)
+# endpoint filter by city
+@app.route("/properties/<city>", methods=["GET"])
+def property_by_city(city):
+    # Get All properties located in the city given in URL
+    all_properties = Property.query.filter_by(city=city).all()
+    result = properties_schema.dump(all_properties)
+    
+    return jsonify(result.data)
 
-    return property_schema.jsonify(property)
 
 # endpoint to update property
 @app.route("/properties/<id>", methods=["PUT"])
