@@ -27,24 +27,20 @@ def add_user():
     if not json_data:
         return jsonify({"message":"This is not a proper json"}),400 
     
-    # Validate and deserialize property
-    data, errors = user_schema.load(json_data)
-    if errors:
-        return jsonify(errors),422 
-    
     # Check presence of keys
     if 'firstname' not in json_data:
-        return jsonify({"message":"firstname missing!"}),422
+        return jsonify({"message":"firstname missing!"}),400
     if 'lastname' not in json_data:
-        return jsonify({"message":"lastname missing!"}),422
+        return jsonify({"message":"lastname missing!"}),400
     if 'birthday' not in json_data:
-        return jsonify({"message":"birthday missing!"}),422
+        return jsonify({"message":"birthday missing!"}),400
     if 'email' not in json_data:
-        return jsonify({"message":"email missing!"}),422
+        return jsonify({"message":"email missing!"}),400
     
     # Get keys
     firstname = json_data['firstname']
     lastname = json_data['lastname']
+    
     birthday = datetime.strptime(json_data['birthday'],'%Y-%m-%d') # Convert str to python date time
     email = json_data['email']
     
@@ -52,8 +48,11 @@ def add_user():
     new_user = User(firstname, lastname, birthday,email)
     
     # Insert in DB
-    db.session.add(new_user)
-    db.session.commit()
+    try:
+        db.session.add(new_user)
+        db.session.commit()
+    except IntegrityError:
+        return jsonify({"message":"User already exists!"}),400
     
     # Return inserted user
     return user_schema.jsonify(new_user)
@@ -99,24 +98,23 @@ def user_update(user_id):
     if user is None:
         return jsonify({"message":"User could not be found"}),400
     
+    # Check JSON validity 
     json_data = request.get_json()
     if not json_data:
         return jsonify({"message":"This is not a proper json"}),400 
     
     # Update only present keys
     if 'firstname' in json_data:
-        firstname = request.json['firstname']
+        firstname = json_data['firstname']
         user.firstname = firstname 
     if 'lastname' in json_data:
-        lastname = request.json['lastname']
+        lastname = json_data['lastname']
         user.lastname = lastname
-        # Get parameters
     if 'birthday'in json_data:
-        birthday = datetime.strptime(request.json['birthday'],'%Y-%m-%d')
+        birthday = datetime.strptime(json_data['birthday'],'%Y-%m-%d')
         user.birthday = birthday
-        # Get parameters
     if 'email' in json_data:
-        email = request.json['email']
+        email = json_data['email']
         user.email = email  
     
     # Restore in DB
