@@ -3,9 +3,9 @@ from app import db
 # Import user model
 from app.models.property import Property
 # Import User schema
+from sqlalchemy.exc import IntegrityError
 from app.schemas.property_schema import PropertySchema
 from flask import Blueprint, request, jsonify
-from datetime import datetime
 
 prop = Blueprint('prop', __name__)
 
@@ -37,29 +37,44 @@ def get_properties():
     all_properties = Property.query.all()
     result = properties_schema.dump(all_properties)
     
-    return jsonify(result.data)
+    return jsonify({"Properties":result.data})
 
 # endpoint filter by city
 @prop.route("/api/properties/<city>", methods=["GET"])
 def property_by_city(city):
-    # Get All properties located in the city given in URL
-    all_properties = Property.query.filter_by(city=city).all()
+    
+    try:
+        # Get All properties located in the city given in URL
+        # Lower param to match with the model
+        all_properties = Property.query.filter_by(city=city.lower()).all()
+    except IntegrityError:
+        return jsonify({"message":"Property could not be found"}),400
+    
     result = properties_schema.dump(all_properties)
     
-    return jsonify(result.data)
-
+    return jsonify({"Properties in "+city:result.data})
 
 # endpoint to update property
 @prop.route("/api/properties/<int:property_id>", methods=["PUT"])
 def property_update(property_id):
-    property = Property.query.get(property_id)
+    
+    print(property_id)
+    print(request.json['name'])            
     
     name = request.json['name']
     description = request.json['description']
     city = request.json['city']
     room = request.json['room']
     userid = request.json['userid']
-
+    
+    try:
+        property = Property.query.get(property_id)
+    except IntegrityError:
+        return jsonify({"message":"Property could not be found"}),404
+        # Return message if no user found
+    if property is None:
+        return jsonify({"message":"Property could not be found"}),404
+    
     property.name = name
     property.description = description
     property.city = city 
@@ -73,7 +88,16 @@ def property_update(property_id):
 # endpoint to delete property
 @prop.route("/api/properties/<int:property_id>", methods=["DELETE"])
 def property_delete(property_id):
-    property = Property.query.get(property_id)
+    
+    # Get Property by id
+    try:
+        property = Property.query.get(property_id)
+    except IntegrityError:
+        return jsonify({"message":"Property could not be found"}),404
+    # Return message if no user found
+    if property is None:
+        return jsonify({"message":"Property could not be found"}),404
+    
     db.session.delete(property)
     db.session.commit()
 

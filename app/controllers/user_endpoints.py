@@ -3,6 +3,9 @@ from app.models.user import User
 from app.schemas.user_schema import UserSchema
 # Import DB from app
 from app import db
+# Import SQLAlchemy Exception
+from sqlalchemy.exc import IntegrityError
+
 from flask import Blueprint, request, jsonify
 from datetime import datetime
 
@@ -32,23 +35,30 @@ def add_user():
     # Return inserted user
     return user_schema.jsonify(new_user)
 
-
 # endpoint to show all users
 @mod.route("/api/users", methods=["GET"])
 def get_user():
+    
     # Query all users in DB
     all_users = User.query.all()
+    
     result = users_schema.dump(all_users)
     
     # Return Json containing all the users in DB
-    return jsonify(result.data)
+    return jsonify({"Users":result.data})
 
 # endpoint to get user detail by id
 @mod.route("/api/users/<int:user_id>", methods=["GET"])
 def user_detail(user_id):
-    # Get details of a specific User
-    user = User.query.get(user_id)
+    try:    
+        # Get details of a specific User
+        user = User.query.get(user_id)
+    except IntegrityError:
+        return jsonify({"message":"User could not be found"}),400
     
+    #Protect result
+    if user is None:
+        return jsonify({"message":"User could not be found"}),400
     # return user
     return user_schema.jsonify(user)
 
@@ -56,13 +66,20 @@ def user_detail(user_id):
 # endpoint to update user
 @mod.route("/api/users/<int:user_id>", methods=["PUT"])
 def user_update(user_id):
-    # Get specific user in DB
-    user = User.query.get(user_id)
+    
+    try:
+        # Get specific user in DB
+        user = User.query.get(user_id)
+    except IntegrityError:
+        return jsonify({"message":"User could not be found"}),400
+    # Return message if no user found
+    if user is None:
+        return jsonify({"message":"User could not be found"}),400
     
     # Get parameters
     firstname = request.json['firstname']
     lastname = request.json['lastname']
-    birthday = request.json['birthday']
+    birthday = datetime.strptime(request.json['birthday'],'%Y-%m-%d')
     
     # change User attributes
     user.firstname = firstname
@@ -75,12 +92,19 @@ def user_update(user_id):
     # Return user
     return user_schema.jsonify(user)
 
-
 # endpoint to delete user
 @mod.route("/api/users/<int:user_id>", methods=["DELETE"])
 def user_delete(user_id):
-    # Get user
-    user = User.query.get(user_id)
+    
+    try:
+        # Get user
+        user = User.query.get(user_id)
+    except IntegrityError:
+        return jsonify({"message":"User could not be found"}),400
+    # Return message if no user found
+    if user is None:
+        return jsonify({"message":"User could not be found"}),400
+    
     # Delete in DB
     db.session.delete(user)
     db.session.commit()
