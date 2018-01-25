@@ -5,22 +5,25 @@ import unidecode as ud
 class Property(db.Model):
     # id
     id = db.Column(db.Integer, primary_key=True)
-    # Name of the property
-    name = db.Column(db.String(255))
-    # Description
-    description = db.Column(db.String(255))
-    # City
-    city = db.Column(db.String(255))
-    # Number of rooms
-    room = db.Column(db.Integer)
-    # userid of the owner -> ownerid -> to be linked to User model
-    userid = db.Column(db.String(255))
+    # Name of the property - Required
+    name = db.Column(db.String(255),unique=False,nullable= False)
+    # Description - Not Unique - Not Required
+    description = db.Column(db.String(255),unique=False,nullable= True)
+    # City - Not Unique - Required
+    city = db.Column(db.String(255),unique=False,nullable= False)
+    # Number of rooms - Not Unique - Required
+    room = db.Column(db.Integer,unique=False,nullable= False)
+    # ID of the owner
+    owner_id = db.Column(db.Integer, db.ForeignKey("user.id"))  
+    # User profile of the owner
+    #user = db.relationship("User",
+    #                         backref=db.backref("properties", lazy="dynamic"))
     
     # Property constructor
-    def __init__(self, name, description, city, room, userid):
+    def __init__(self, name, description, city, room, owner_id):
         self.name = name
         self.description = description
         # Lower "city" str and remove accents to improve query results on that field
         self.city = ud.unidecode(city.lower())
         self.room = room
-        self.userid = userid
+        self.owner_id = owner_id
