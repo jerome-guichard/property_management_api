@@ -20,6 +20,19 @@ users_schema = UserSchema(many=True) # Multiple user
 # endpoint to create new user
 @mod.route("/api/users", methods=["POST"])
 def add_user():
+    
+    # Make sure the json is correct otherwise return 400
+    # If not a json
+    json_data = request.get_json()
+    if not json_data:
+        return jsonify({"message":"This is not a proper json"}),400 
+    
+    # Validate and deserialize property
+    data, errors = user_schema.load(json_data)
+    if errors:
+        return jsonify(errors),422 
+    
+    
     # Get parameters
     firstname = request.json['firstname']
     lastname = request.json['lastname']
