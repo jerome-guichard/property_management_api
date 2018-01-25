@@ -3,4 +3,4 @@ from app import ma
 class PropertySchema(ma.Schema):
     class Meta:
         # Fields to expose
-        fields = ('name', 'description','city','room','userid')
+        fields = ( 'name', 'description', 'city', 'room', 'userid')

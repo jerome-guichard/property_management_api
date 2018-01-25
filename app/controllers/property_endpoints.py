@@ -6,6 +6,8 @@ from app.models.property import Property
 from sqlalchemy.exc import IntegrityError
 from app.schemas.property_schema import PropertySchema
 from flask import Blueprint, request, jsonify
+import unidecode as ud 
+
 
 prop = Blueprint('prop', __name__)
 
@@ -22,7 +24,8 @@ def add_property():
     city = request.json['city']
     room = request.json['room']
     userid = request.json['userid']
-        
+    
+    # Create new instance of Property
     new_property = Property(name, description, city, room, userid)
 
     db.session.add(new_property)
@@ -45,8 +48,8 @@ def property_by_city(city):
     
     try:
         # Get All properties located in the city given in URL
-        # Lower param to match with the model
-        all_properties = Property.query.filter_by(city=city.lower()).all()
+        # Lower param and remove accent to match with the model
+        all_properties = Property.query.filter_by(city=ud.unidecode(city.lower())).all()
     except IntegrityError:
         return jsonify({"message":"Property could not be found"}),400
     
