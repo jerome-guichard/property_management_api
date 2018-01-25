@@ -12,7 +12,7 @@ class User(db.Model):
     # User birthday (Date time) - Required
     birthday = db.Column(db.DateTime,unique=False, nullable= False)
     # Email must be unique - Required - Unique
-    email = db.Column(db.String(120))
+    email = db.Column(db.String(120),unique=True)
     
     # User Constructor
     def __init__(self, firstname, lastname,birthday,email):
