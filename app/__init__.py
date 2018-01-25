@@ -1,17 +1,16 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 import os
+from config import DevelopmentConfig
+
 
 
 # Define Flask App
 app = Flask(__name__)
-#app.config.from_object(app.config)
-basedir = os.path.abspath(os.path.dirname(__file__))
-# App config
-# URI to SQLite DB
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'property_management_db.sqlite')
-# Define db access
+# Get config in config file
+app.config.from_object(DevelopmentConfig)
+
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 
