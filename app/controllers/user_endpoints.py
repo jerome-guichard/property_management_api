@@ -32,14 +32,24 @@ def add_user():
     if errors:
         return jsonify(errors),422 
     
+    # Check presence of keys
+    if 'firstname' not in json_data:
+        return jsonify({"message":"firstname missing!"}),422
+    if 'lastname' not in json_data:
+        return jsonify({"message":"lastname missing!"}),422
+    if 'birthday' not in json_data:
+        return jsonify({"message":"birthday missing!"}),422
+    if 'email' not in json_data:
+        return jsonify({"message":"email missing!"}),422
     
-    # Get parameters
-    firstname = request.json['firstname']
-    lastname = request.json['lastname']
-    birthday = datetime.strptime(request.json['birthday'],'%Y-%m-%d') # Convert str to python date time
+    # Get keys
+    firstname = json_data['firstname']
+    lastname = json_data['lastname']
+    birthday = datetime.strptime(json_data['birthday'],'%Y-%m-%d') # Convert str to python date time
+    email = json_data['email']
     
     # Instantiate new User
-    new_user = User(firstname, lastname, birthday)
+    new_user = User(firstname, lastname, birthday,email)
     
     # Insert in DB
     db.session.add(new_user)
@@ -89,15 +99,25 @@ def user_update(user_id):
     if user is None:
         return jsonify({"message":"User could not be found"}),400
     
-    # Get parameters
-    firstname = request.json['firstname']
-    lastname = request.json['lastname']
-    birthday = datetime.strptime(request.json['birthday'],'%Y-%m-%d')
+    json_data = request.get_json()
+    if not json_data:
+        return jsonify({"message":"This is not a proper json"}),400 
     
-    # change User attributes
-    user.firstname = firstname
-    user.lastname = lastname
-    user.birthday = birthday 
+    # Update only present keys
+    if 'firstname' in json_data:
+        firstname = request.json['firstname']
+        user.firstname = firstname 
+    if 'lastname' in json_data:
+        lastname = request.json['lastname']
+        user.lastname = lastname
+        # Get parameters
+    if 'birthday'in json_data:
+        birthday = datetime.strptime(request.json['birthday'],'%Y-%m-%d')
+        user.birthday = birthday
+        # Get parameters
+    if 'email' in json_data:
+        email = request.json['email']
+        user.email = email  
     
     # Restore in DB
     db.session.commit()
@@ -124,4 +144,3 @@ def user_delete(user_id):
     
     # return user
     return user_schema.jsonify(user)
-
