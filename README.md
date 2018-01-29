@@ -39,11 +39,8 @@ It sets up the API and the SQLite DB
 2- Test in your browser:
 ```
 http://localhost:5000/api/users
-<<<<<<< HEAD
-``` 
-=======
+
 ```
->>>>>>> 16c696a9cb100b510170785400e591c3ed0c5338
 ```
 http://localhost:5000/api/properties
 ```
