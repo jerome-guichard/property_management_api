@@ -71,7 +71,7 @@ with json body: (all the fields are required)
   "birthday":"1958-08-29",
   "email":"ja@mi.fr"
 }
-'''
+```
 
 Update a user information DB:
 ```
